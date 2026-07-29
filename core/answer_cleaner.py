@@ -24,41 +24,31 @@ class AnswerCleaner:
         )
 
 
-        lines = []
-
-        blocked = [
-            "Original author",
-            "Stable release",
-            "Written in",
-            "License",
-            "Website",
-            "Repository"
+        patterns = [
+            r'Original author.*?(?=\.|$)',
+            r'Stable release.*?(?=\.|$)',
+            r'Written in.*?(?=\.|$)',
+            r'License.*?(?=\.|$)',
+            r'Website.*?(?=\.|$)',
+            r'Repository.*?(?=\.|$)'
         ]
 
 
-        for line in text.split("\n"):
+        for pattern in patterns:
 
-            skip = False
-
-            for word in blocked:
-
-                if word.lower() in line.lower():
-                    skip = True
-                    break
-
-
-            if not skip:
-                lines.append(line)
+            text = re.sub(
+                pattern,
+                '',
+                text,
+                flags=re.I
+            )
 
 
-        result = "\n".join(lines)
-
-
-        result = re.sub(
+        text = re.sub(
             r'\s+',
             ' ',
-            result
+            text
         )
 
 
-        return result.strip()
+        return text.strip()
