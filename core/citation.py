@@ -1,34 +1,28 @@
 class CitationManager:
 
+
     def __init__(self):
         pass
 
 
     def create_citation(self, source):
 
-        citation = {}
+        return {
+            "title": source.get(
+                "source",
+                "Unknown Source"
+            ),
 
-        citation["title"] = source.get(
-            "title",
-            "Unknown Source"
-        )
+            "url": source.get(
+                "url",
+                ""
+            ),
 
-        citation["book"] = source.get(
-            "book",
-            ""
-        )
-
-        citation["chapter"] = source.get(
-            "chapter",
-            ""
-        )
-
-        citation["page"] = source.get(
-            "page",
-            ""
-        )
-
-        return citation
+            "score": source.get(
+                "score",
+                0
+            )
+        }
 
 
     def format(self, sources):
@@ -40,20 +34,28 @@ class CitationManager:
             start=1
         ):
 
-            item = self.create_citation(source)
+            item = self.create_citation(
+                source
+            )
 
-            text = f"[{index}] {item['title']}"
+            text = (
+                f"[{index}] "
+                f"{item['title']}"
+            )
 
-            if item["book"]:
-                text += f" | Book: {item['book']}"
+            if item["url"]:
 
-            if item["chapter"]:
-                text += f" | Chapter: {item['chapter']}"
+                text += (
+                    f" | {item['url']}"
+                )
 
-            if item["page"]:
-                text += f" | Page: {item['page']}"
+            text += (
+                f" | Score: {item['score']}"
+            )
 
-            citations.append(text)
+            citations.append(
+                text
+            )
 
 
         return "\n".join(citations)

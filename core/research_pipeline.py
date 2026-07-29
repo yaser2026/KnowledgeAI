@@ -24,30 +24,32 @@ class ResearchPipeline:
             question
         )
 
-
         urls = self.search.search(
             question,
             limit
         )
 
-
         results = self.adapter.convert(
             urls
         )
 
-
         ranked = self.reranker.rerank(
             results
         )
-
 
         context = self.context.build(
             ranked
         )
 
 
+        citations = self.citation.format(
+            context["context"]
+        )
+
+
         return {
             "analysis": analysis,
             "results": ranked,
-            "context": context
+            "context": context,
+            "citations": citations
         }
