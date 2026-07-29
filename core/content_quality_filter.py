@@ -8,54 +8,79 @@ class ContentQualityFilter:
         pass
 
 
+
     def is_bad(self, text):
 
         if not text:
             return True
 
 
-        length = len(text)
+        text = text.strip()
 
 
-        if length < 40:
+        if len(text) < 80:
             return True
 
-
-        # حذف جدول/مشخصات صفحه
-        bad_patterns = [
-            r"original author",
-            r"stable release",
-            r"preview release",
-            r"website",
-            r"repository",
-            r"license",
-            r"written in",
-            r"------"
-        ]
 
 
         lower = text.lower()
 
 
+
+        bad_patterns = [
+            "about contact",
+            "site news",
+            "atom feed",
+            "mailing lists",
+            "patchwork",
+            "mirrors",
+            "social site",
+            "faq",
+            "bugzilla"
+        ]
+
+
         for p in bad_patterns:
-            if re.search(p, lower):
+
+            if p in lower:
                 return True
 
 
-        # درصد علائم غیرطبیعی
+
+        # حذف متن‌هایی که بیشتر شبیه منو هستند
+
+        words = text.split()
+
+
+        if len(words) > 0:
+
+            unique_ratio = len(
+                set(words)
+            ) / len(words)
+
+
+            if unique_ratio < 0.35:
+                return True
+
+
+
+        # حذف متن با لینک/نشانه زیاد
+
         symbols = len(
             re.findall(
-                r"[\[\]{}():]",
+                r'[/|@:_-]',
                 text
             )
         )
 
 
-        if symbols > 8:
+        if symbols > 12:
             return True
 
 
+
         return False
+
 
 
 
