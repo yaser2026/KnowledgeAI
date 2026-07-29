@@ -14,15 +14,6 @@ class AnswerGenerator:
 
         answer = []
 
-        answer.append(
-            f"Question: {question}\n"
-        )
-
-
-        answer.append(
-            "Answer:\n"
-        )
-
 
         for item in context:
 
@@ -31,22 +22,12 @@ class AnswerGenerator:
                 ""
             )
 
+
             if text:
 
                 answer.append(
-                    "- " + text
+                    "- " + text.strip()
                 )
-
-
-        if citations:
-
-            answer.append(
-                "\nSources:\n"
-            )
-
-            answer.append(
-                citations
-            )
 
 
         return "\n".join(
