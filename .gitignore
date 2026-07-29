@@ -5,3 +5,5 @@ output/*.pdf
 
 # Database
 data/*.db
+backup/
+core/*_backup.py
