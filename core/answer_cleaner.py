@@ -10,6 +10,7 @@ class AnswerCleaner:
             return ""
 
 
+        # Remove wikipedia references
         text = re.sub(
             r'\[\d+\](?::\s*\d+)?',
             '',
@@ -42,6 +43,21 @@ class AnswerCleaner:
                 text,
                 flags=re.I
             )
+
+
+        # Clean broken punctuation
+        text = re.sub(
+            r'\.{2,}',
+            '.',
+            text
+        )
+
+
+        text = re.sub(
+            r'\s+\.',
+            '.',
+            text
+        )
 
 
         text = re.sub(
