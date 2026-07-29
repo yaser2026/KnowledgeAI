@@ -2,6 +2,7 @@ from core.query_analyzer import QueryAnalyzer
 from core.reranker import ReRanker
 from core.context_builder import ContextBuilder
 from core.citation import CitationManager
+from core.answer_cleaner import AnswerCleaner
 from core.answer_generator import AnswerGenerator
 from core.research_adapter import ResearchAdapter
 from core.search_engine import SearchEngine
@@ -18,6 +19,7 @@ class ResearchPipeline:
         self.reranker = ReRanker()
         self.context = ContextBuilder()
         self.citation = CitationManager()
+        self.cleaner = AnswerCleaner()
         self.answer = AnswerGenerator()
 
 
@@ -32,43 +34,43 @@ class ResearchPipeline:
             question
         )
 
-
         urls = self.search.search(
             question,
             limit
         )
 
-
         results = self.adapter.convert(
             urls
         )
-
 
         ranked = self.reranker.rerank(
             results
         )
 
-
         context = self.context.build(
             ranked
         )
-
 
         citations = self.citation.format(
             context["context"]
         )
 
 
-        answer = self.answer.build_answer(
+        raw_answer = self.answer.build_answer(
             question,
             context["context"],
             citations
         )
 
 
+        clean_answer = self.cleaner.clean(
+            raw_answer
+        )
+
+
         return {
             "analysis": analysis,
-            "answer": answer,
+            "answer": clean_answer,
             "results": ranked,
             "context": context,
             "citations": citations
