@@ -7,3 +7,4 @@ output/*.pdf
 data/*.db
 backup/
 core/*_backup.py
+core/*_v27_*.py
