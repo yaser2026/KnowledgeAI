@@ -5,6 +5,7 @@ from core.citation import CitationManager
 from core.answer_cleaner import AnswerCleaner
 from core.answer_generator import AnswerGenerator
 from core.response_formatter import ResponseFormatter
+from core.sentence_selector import SentenceSelector
 from core.research_adapter import ResearchAdapter
 from core.search_engine import SearchEngine
 
@@ -19,6 +20,7 @@ class ResearchPipeline:
         self.adapter = ResearchAdapter()
         self.reranker = ReRanker()
         self.context = ContextBuilder()
+        self.selector = SentenceSelector()
         self.citation = CitationManager()
         self.cleaner = AnswerCleaner()
         self.answer = AnswerGenerator()
@@ -58,14 +60,19 @@ class ResearchPipeline:
         )
 
 
-        citations = self.citation.format(
+        selected = self.selector.select(
             context["context"]
+        )
+
+
+        citations = self.citation.format(
+            selected
         )
 
 
         raw_answer = self.answer.build_answer(
             question,
-            context["context"],
+            selected,
             citations
         )
 
@@ -85,6 +92,6 @@ class ResearchPipeline:
             "analysis": analysis,
             "answer": response["answer"],
             "results": ranked,
-            "context": context,
+            "context": selected,
             "citations": response["citations"]
         }
