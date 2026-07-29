@@ -3,8 +3,9 @@ import re
 
 class ContextBuilder:
 
-    def __init__(self, max_chunks=5):
+    def __init__(self, max_chunks=5, max_chars=5000):
         self.max_chunks = max_chunks
+        self.max_chars = max_chars
 
 
     def clean_text(self, text):
@@ -20,25 +21,34 @@ class ContextBuilder:
         return text
 
 
-    def remove_duplicates(self, chunks):
+    def split_sentences(self, text):
+
+        return re.split(
+            r'(?<=[.!?])\s+',
+            text
+        )
+
+
+    def remove_duplicates(self, items):
 
         seen = set()
-        unique = []
+        result = []
 
-        for chunk in chunks:
+        for item in items:
 
-            key = chunk[:100].lower()
+            key = item[:100].lower()
 
             if key not in seen:
-                seen.add(key)
-                unique.append(chunk)
 
-        return unique
+                seen.add(key)
+                result.append(item)
+
+        return result
 
 
     def build(self, results):
 
-        chunks = []
+        all_text = []
 
         for item in results:
 
@@ -49,15 +59,44 @@ class ContextBuilder:
 
             if content:
 
-                chunks.append(
-                    self.clean_text(content)
+                text = self.clean_text(
+                    content
+                )
+
+                sentences = self.split_sentences(
+                    text
+                )
+
+                all_text.extend(
+                    sentences
                 )
 
 
-        chunks = self.remove_duplicates(chunks)
+        all_text = self.remove_duplicates(
+            all_text
+        )
+
+
+        context = []
+
+        size = 0
+
+        for sentence in all_text:
+
+            if len(context) >= self.max_chunks:
+                break
+
+
+            if size + len(sentence) > self.max_chars:
+                break
+
+
+            context.append(sentence)
+            size += len(sentence)
 
 
         return {
-            "context": chunks[:self.max_chunks],
-            "count": len(chunks[:self.max_chunks])
+            "context": context,
+            "count": len(context),
+            "chars": size
         }
