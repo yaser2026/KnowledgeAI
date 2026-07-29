@@ -9,7 +9,7 @@ class EvidenceMerger:
 
     def normalize(self, text):
 
-        text = text.lower()
+        text = str(text).lower()
 
         text = re.sub(
             r'\s+',
@@ -18,6 +18,18 @@ class EvidenceMerger:
         )
 
         return text.strip()
+
+
+
+    def get_text(self, item):
+
+        return item.get(
+            "text",
+            item.get(
+                "content",
+                ""
+            )
+        )
 
 
 
@@ -44,33 +56,6 @@ class EvidenceMerger:
 
 
 
-    def calculate_confidence(self, item, support_count):
-
-        score = 0.5
-
-
-        if support_count > 1:
-            score += 0.1 * min(
-                support_count,
-                5
-            )
-
-
-        if item.get("source"):
-            score += 0.1
-
-
-        if item.get("title"):
-            score += 0.05
-
-
-        return min(
-            round(score, 2),
-            1.0
-        )
-
-
-
     def merge(self, items):
 
         merged = []
@@ -78,54 +63,57 @@ class EvidenceMerger:
 
         for item in items:
 
-            text = item.get(
-                "text",
-                ""
-            )
-
+            text = self.get_text(item)
 
             if not text:
                 continue
 
 
-            found = False
+            duplicate = False
 
 
             for old in merged:
 
-                similarity = self.similarity(
+                old_text = self.get_text(old)
+
+
+                if self.similarity(
                     text,
-                    old["text"]
-                )
+                    old_text
+                ) > 0.6:
 
+                    old["support_count"] = old.get(
+                        "support_count",
+                        1
+                    ) + 1
 
-                if similarity > 0.6:
-
-                    old["support_count"] += 1
-
-                    old["confidence"] = self.calculate_confidence(
-                        old,
-                        old["support_count"]
+                    old["confidence"] = round(
+                        min(
+                            0.5 + old["support_count"] * 0.15,
+                            1.0
+                        ),
+                        2
                     )
 
-                    found = True
+                    duplicate = True
                     break
 
 
 
-            if not found:
+            if not duplicate:
 
-                new_item = dict(item)
+                item["support_count"] = 1
 
-                new_item["support_count"] = 1
-
-                new_item["confidence"] = self.calculate_confidence(
-                    new_item,
-                    1
+                item["confidence"] = round(
+                    0.5 + item.get(
+                        "content_quality",
+                        0
+                    ) * 0.5,
+                    2
                 )
 
                 merged.append(
-                    new_item
+                    item
                 )
 
 
