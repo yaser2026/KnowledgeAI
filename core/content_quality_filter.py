@@ -8,7 +8,6 @@ class ContentQualityFilter:
         pass
 
 
-
     def is_bad(self, text):
 
         if not text:
@@ -18,13 +17,11 @@ class ContentQualityFilter:
         text = text.strip()
 
 
-        if len(text) < 80:
+        if len(text) < 60:
             return True
 
 
-
         lower = text.lower()
-
 
 
         bad_patterns = [
@@ -33,61 +30,33 @@ class ContentQualityFilter:
             "atom feed",
             "mailing lists",
             "patchwork",
-            "mirrors",
-            "social site",
-            "faq",
-            "bugzilla"
+            "bugzilla",
+            "social site"
         ]
 
 
         for p in bad_patterns:
-
             if p in lower:
                 return True
 
 
-
-        # حذف متن‌هایی که بیشتر شبیه منو هستند
-
         words = text.split()
 
 
-        if len(words) > 0:
+        if len(words) > 20:
+            unique_ratio = len(set(words)) / len(words)
 
-            unique_ratio = len(
-                set(words)
-            ) / len(words)
-
-
-            if unique_ratio < 0.35:
+            if unique_ratio < 0.25:
                 return True
-
-
-
-        # حذف متن با لینک/نشانه زیاد
-
-        symbols = len(
-            re.findall(
-                r'[/|@:_-]',
-                text
-            )
-        )
-
-
-        if symbols > 12:
-            return True
-
 
 
         return False
 
 
 
-
     def filter(self, items):
 
         results = []
-
 
         for item in items:
 
@@ -96,12 +65,8 @@ class ContentQualityFilter:
                 ""
             )
 
-
             if not self.is_bad(text):
-
-                results.append(
-                    item
-                )
+                results.append(item)
 
 
         return results
