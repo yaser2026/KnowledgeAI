@@ -10,12 +10,16 @@ DB_PATH = BASE_DIR / "data" / "knowledge.db"
 class Database:
 
     def __init__(self):
+
         self.conn = sqlite3.connect(DB_PATH)
+
         self.cursor = self.conn.cursor()
 
 
     def close(self):
+
         self.conn.close()
+
 
 
     def add_article(
@@ -27,7 +31,46 @@ class Database:
         category=""
     ):
 
+        existing = self.get_by_url(url)
+
+
+        # اگر مقاله وجود داشت، بروزرسانی شود
+        if existing:
+
+            self.cursor.execute(
+                """
+                UPDATE articles
+                SET
+                    title=?,
+                    content=?,
+                    summary=?,
+                    category=?,
+                    created_at=CURRENT_TIMESTAMP
+                WHERE url=?
+                """,
+                (
+                    title,
+                    content,
+                    summary,
+                    category,
+                    url
+                )
+            )
+
+            self.conn.commit()
+
+            print(
+                "Article updated:",
+                existing[0]
+            )
+
+            return existing[0]
+
+
+
+        # اگر جدید بود، ذخیره شود
         try:
+
             self.cursor.execute(
                 """
                 INSERT INTO articles
@@ -53,8 +96,31 @@ class Database:
 
             return self.cursor.lastrowid
 
-        except sqlite3.IntegrityError:
+
+        except sqlite3.Error as e:
+
+            print(
+                "Database error:",
+                e
+            )
+
             return None
+
+
+
+    def get_by_url(self, url):
+
+        self.cursor.execute(
+            """
+            SELECT *
+            FROM articles
+            WHERE url=?
+            """,
+            (url,)
+        )
+
+        return self.cursor.fetchone()
+
 
 
     def get_article(self, article_id):
@@ -71,14 +137,15 @@ class Database:
         return self.cursor.fetchone()
 
 
+
     def search_articles(self, keyword):
 
         self.cursor.execute(
             """
-            SELECT id,title,category
+            SELECT id, title, category
             FROM articles
-            WHERE content LIKE ?
-            OR title LIKE ?
+            WHERE title LIKE ?
+            OR content LIKE ?
             """,
             (
                 f"%{keyword}%",
@@ -89,28 +156,40 @@ class Database:
         return self.cursor.fetchall()
 
 
+
     def add_keyword(
         self,
         article_id,
         keyword
     ):
 
-        self.cursor.execute(
-            """
-            INSERT INTO keywords
-            (
-                article_id,
-                keyword
-            )
-            VALUES (?,?)
-            """,
-            (
-                article_id,
-                keyword
-            )
-        )
+        try:
 
-        self.conn.commit()
+            self.cursor.execute(
+                """
+                INSERT INTO keywords
+                (
+                    article_id,
+                    keyword
+                )
+                VALUES (?, ?)
+                """,
+                (
+                    article_id,
+                    keyword
+                )
+            )
+
+            self.conn.commit()
+
+
+        except sqlite3.Error as e:
+
+            print(
+                "Keyword error:",
+                e
+            )
+
 
 
     def add_log(
@@ -126,7 +205,7 @@ class Database:
                 action,
                 message
             )
-            VALUES (?,?)
+            VALUES (?, ?)
             """,
             (
                 action,
@@ -142,18 +221,25 @@ if __name__ == "__main__":
 
     db = Database()
 
+
     article_id = db.add_article(
-        "Test Article",
-        "https://example.com",
-        "KnowledgeAI test content",
+        "KnowledgeAI Test",
+        "https://test.com",
+        "Database manager test",
         "test summary",
         "AI"
     )
 
-    print("Article ID:", article_id)
+
+    print(
+        "Article ID:",
+        article_id
+    )
+
 
     print(
         db.search_articles("KnowledgeAI")
     )
+
 
     db.close()
