@@ -1,135 +1,83 @@
-import re
+from core.duplicate_filter import DuplicateFilter
 
 
 class ContextBuilder:
 
-    def __init__(self, max_chunks=5, max_chars=5000):
+    def __init__(
+        self,
+        max_chunks=5
+    ):
         self.max_chunks = max_chunks
-        self.max_chars = max_chars
+        self.duplicate_filter = DuplicateFilter()
 
 
-    def clean_text(self, text):
-
-        text = text.strip()
-
-        text = re.sub(
-            r"\s+",
-            " ",
-            text
-        )
-
-        return text
-
-
-    def split_sentences(self, text):
-
-        return re.split(
-            r'(?<=[.!?])\s+',
-            text
-        )
-
-
-    def remove_duplicates(self, items):
-
-        seen = set()
-        result = []
-
-        for item in items:
-
-            key = item["text"][:100].lower()
-
-            if key not in seen:
-
-                seen.add(key)
-                result.append(item)
-
-        return result
-
-
-    def build(self, results):
+    def build(
+        self,
+        items
+    ):
 
         chunks = []
 
-        for item in results:
+        for item in items:
 
-            content = item.get(
+            text = item.get(
                 "content",
                 ""
             )
 
-            if not content:
+            if not text:
+                text = item.get(
+                    "text",
+                    ""
+                )
+
+            if not text:
                 continue
 
 
-            text = self.clean_text(
-                content
-            )
-
-
-            sentences = self.split_sentences(
-                text
-            )
-
-
-            for sentence in sentences:
-
-                if len(sentence.strip()) < 40:
-                    continue
-
-
-                chunks.append(
-                    {
-                        "text": sentence.strip(),
-                        "source": item.get(
-                            "title",
+            chunks.append(
+                {
+                    "text": text.strip(),
+                    "source": item.get(
+                        "title",
+                        item.get(
+                            "source",
                             "Unknown"
-                        ),
-                        "url": item.get(
-                            "url",
-                            ""
-                        ),
-                        "score": item.get(
-                            "final_score",
+                        )
+                    ),
+                    "url": item.get(
+                        "url",
+                        ""
+                    ),
+                    "score": item.get(
+                        "final_score",
+                        item.get(
+                            "score",
                             0
                         )
-                    }
-                )
+                    )
+                }
+            )
 
 
-        chunks = self.remove_duplicates(
+        chunks = self.duplicate_filter.filter(
             chunks
         )
 
 
-        selected = []
-
-        size = 0
+        chunks = chunks[:self.max_chunks]
 
 
-        for chunk in chunks:
-
-            if len(selected) >= self.max_chunks:
-                break
-
-
-            length = len(
-                chunk["text"]
+        chars = sum(
+            len(
+                c["text"]
             )
-
-
-            if size + length > self.max_chars:
-                break
-
-
-            selected.append(
-                chunk
-            )
-
-            size += length
+            for c in chunks
+        )
 
 
         return {
-            "context": selected,
-            "count": len(selected),
-            "chars": size
+            "context": chunks,
+            "count": len(chunks),
+            "chars": chars
         }
