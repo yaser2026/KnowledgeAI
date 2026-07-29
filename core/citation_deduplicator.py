@@ -1,8 +1,29 @@
+import re
+
+
 class CitationDeduplicator:
 
 
     def __init__(self):
         pass
+
+
+    def extract_source(self, text):
+
+        text = text.strip()
+
+        text = re.sub(
+            r"^\[\d+\]\s*",
+            "",
+            text
+        )
+
+        source = text.split(
+            "|"
+        )[0].strip()
+
+        return source
+
 
 
     def deduplicate(self, citations):
@@ -12,7 +33,10 @@ class CitationDeduplicator:
 
 
         if isinstance(citations, str):
-            citations = citations.split("\n")
+
+            citations = citations.split(
+                "\n"
+            )
 
 
         result = []
@@ -21,18 +45,21 @@ class CitationDeduplicator:
 
         for item in citations:
 
-            key = item.strip()
-
-            if not key:
+            if not item:
                 continue
 
 
-            if key not in seen:
+            source = self.extract_source(
+                item
+            )
 
-                seen.add(key)
+
+            if source not in seen:
+
+                seen.add(source)
 
                 result.append(
-                    key
+                    item
                 )
 
 
