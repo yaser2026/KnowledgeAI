@@ -6,8 +6,10 @@ from core.answer_cleaner import AnswerCleaner
 from core.answer_generator import AnswerGenerator
 from core.response_formatter import ResponseFormatter
 from core.sentence_selector import SentenceSelector
+from core.content_quality_filter import ContentQualityFilter
 from core.research_adapter import ResearchAdapter
 from core.search_engine import SearchEngine
+
 
 
 class ResearchPipeline:
@@ -16,14 +18,25 @@ class ResearchPipeline:
     def __init__(self):
 
         self.analyzer = QueryAnalyzer()
+
         self.search = SearchEngine()
+
         self.adapter = ResearchAdapter()
+
         self.reranker = ReRanker()
+
         self.context = ContextBuilder()
+
+        self.quality_filter = ContentQualityFilter()
+
         self.selector = SentenceSelector()
+
         self.citation = CitationManager()
-        self.cleaner = AnswerCleaner()
+
         self.answer = AnswerGenerator()
+
+        self.cleaner = AnswerCleaner()
+
         self.formatter = ResponseFormatter()
 
 
@@ -33,6 +46,7 @@ class ResearchPipeline:
         question,
         limit=5
     ):
+
 
         analysis = self.analyzer.analyze(
             question
@@ -60,8 +74,13 @@ class ResearchPipeline:
         )
 
 
-        selected = self.selector.select(
+        filtered = self.quality_filter.filter(
             context["context"]
+        )
+
+
+        selected = self.selector.select(
+            filtered
         )
 
 
@@ -90,8 +109,32 @@ class ResearchPipeline:
 
         return {
             "analysis": analysis,
-            "answer": response["answer"],
             "results": ranked,
             "context": selected,
+            "answer": response["answer"],
             "citations": response["citations"]
         }
+
+
+
+if __name__ == "__main__":
+
+
+    pipeline = ResearchPipeline()
+
+
+    result = pipeline.run(
+        "What is Linux kernel?",
+        3
+    )
+
+
+    print(
+        result["answer"]
+    )
+
+    print()
+
+    print(
+        result["citations"]
+    )
