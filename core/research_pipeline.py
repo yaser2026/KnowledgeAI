@@ -14,6 +14,7 @@ from core.sentence_selector import SentenceSelector
 from core.content_quality_filter import ContentQualityFilter
 
 from core.research_adapter import ResearchAdapter
+from core.source_diversity import SourceDiversity
 from core.search_engine import SearchEngine
 
 
@@ -25,6 +26,7 @@ class ResearchPipeline:
 
         self.search = SearchEngine()
         self.adapter = ResearchAdapter()
+        self.source_diversity = SourceDiversity()
 
         self.reranker = ReRanker()
 
@@ -63,6 +65,10 @@ class ResearchPipeline:
 
         ranked = self.reranker.rerank(
             results
+        )
+
+        ranked = self.source_diversity.filter(
+            ranked
         )
 
 
