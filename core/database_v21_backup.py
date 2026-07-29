@@ -7,18 +7,13 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 DB_PATH = BASE_DIR / "data" / "knowledge.db"
 
 
-
 class Database:
-
 
     def __init__(self):
 
-        self.conn = sqlite3.connect(
-            DB_PATH
-        )
+        self.conn = sqlite3.connect(DB_PATH)
 
         self.cursor = self.conn.cursor()
-
 
 
     def close(self):
@@ -27,100 +22,20 @@ class Database:
 
 
 
-    # -------------------------
-    # Jobs
-    # -------------------------
-
-    def create_job(
-        self,
-        query
-    ):
-
-        self.cursor.execute(
-            """
-            INSERT INTO jobs
-            (
-                query,
-                status
-            )
-            VALUES (?, ?)
-            """,
-            (
-                query,
-                "running"
-            )
-        )
-
-        self.conn.commit()
-
-        return self.cursor.lastrowid
-
-
-
-    def update_job_status(
-        self,
-        job_id,
-        status
-    ):
-
-        self.cursor.execute(
-            """
-            UPDATE jobs
-            SET status=?
-            WHERE id=?
-            """,
-            (
-                status,
-                job_id
-            )
-        )
-
-        self.conn.commit()
-
-
-
-    def get_job(
-        self,
-        job_id
-    ):
-
-        self.cursor.execute(
-            """
-            SELECT *
-            FROM jobs
-            WHERE id=?
-            """,
-            (
-                job_id,
-            )
-        )
-
-        return self.cursor.fetchone()
-
-
-
-    # -------------------------
-    # Articles
-    # -------------------------
-
     def add_article(
         self,
         title,
         url,
         content="",
         summary="",
-        category="",
-        job_id=None
+        category=""
     ):
 
-
-        existing = self.get_by_url(
-            url
-        )
+        existing = self.get_by_url(url)
 
 
+        # اگر مقاله وجود داشت، بروزرسانی شود
         if existing:
-
 
             self.cursor.execute(
                 """
@@ -130,7 +45,6 @@ class Database:
                     content=?,
                     summary=?,
                     category=?,
-                    job_id=?,
                     created_at=CURRENT_TIMESTAMP
                 WHERE url=?
                 """,
@@ -139,27 +53,23 @@ class Database:
                     content,
                     summary,
                     category,
-                    job_id,
                     url
                 )
             )
 
-
             self.conn.commit()
-
 
             print(
                 "Article updated:",
                 existing[0]
             )
 
-
             return existing[0]
 
 
 
+        # اگر جدید بود، ذخیره شود
         try:
-
 
             self.cursor.execute(
                 """
@@ -169,47 +79,36 @@ class Database:
                     url,
                     content,
                     summary,
-                    category,
-                    job_id
+                    category
                 )
-                VALUES (?, ?, ?, ?, ?, ?)
+                VALUES (?, ?, ?, ?, ?)
                 """,
                 (
                     title,
                     url,
                     content,
                     summary,
-                    category,
-                    job_id
+                    category
                 )
             )
 
-
             self.conn.commit()
-
 
             return self.cursor.lastrowid
 
 
-
         except sqlite3.Error as e:
-
 
             print(
                 "Database error:",
                 e
             )
 
-
             return None
 
 
 
-
-    def get_by_url(
-        self,
-        url
-    ):
+    def get_by_url(self, url):
 
         self.cursor.execute(
             """
@@ -217,19 +116,14 @@ class Database:
             FROM articles
             WHERE url=?
             """,
-            (
-                url,
-            )
+            (url,)
         )
 
         return self.cursor.fetchone()
 
 
 
-    def get_article(
-        self,
-        article_id
-    ):
+    def get_article(self, article_id):
 
         self.cursor.execute(
             """
@@ -237,39 +131,14 @@ class Database:
             FROM articles
             WHERE id=?
             """,
-            (
-                article_id,
-            )
+            (article_id,)
         )
 
         return self.cursor.fetchone()
 
 
 
-    def get_articles_by_job(
-        self,
-        job_id
-    ):
-
-        self.cursor.execute(
-            """
-            SELECT title, content
-            FROM articles
-            WHERE job_id=?
-            """,
-            (
-                job_id,
-            )
-        )
-
-        return self.cursor.fetchall()
-
-
-
-    def search_articles(
-        self,
-        keyword
-    ):
+    def search_articles(self, keyword):
 
         self.cursor.execute(
             """
@@ -288,16 +157,11 @@ class Database:
 
 
 
-    # -------------------------
-    # Keywords
-    # -------------------------
-
     def add_keyword(
         self,
         article_id,
         keyword
     ):
-
 
         try:
 
@@ -316,13 +180,10 @@ class Database:
                 )
             )
 
-
             self.conn.commit()
 
 
-
         except sqlite3.Error as e:
-
 
             print(
                 "Keyword error:",
@@ -331,16 +192,11 @@ class Database:
 
 
 
-    # -------------------------
-    # Logs
-    # -------------------------
-
     def add_log(
         self,
         action,
         message
     ):
-
 
         self.cursor.execute(
             """
@@ -357,38 +213,32 @@ class Database:
             )
         )
 
-
         self.conn.commit()
-
-
 
 
 
 if __name__ == "__main__":
 
-
     db = Database()
 
 
-    job = db.create_job(
-        "Database Test"
+    article_id = db.add_article(
+        "KnowledgeAI Test",
+        "https://test.com",
+        "Database manager test",
+        "test summary",
+        "AI"
     )
 
 
     print(
-        "Job ID:",
-        job
-    )
-
-
-    db.update_job_status(
-        job,
-        "completed"
+        "Article ID:",
+        article_id
     )
 
 
     print(
-        db.get_job(job)
+        db.search_articles("KnowledgeAI")
     )
 
 

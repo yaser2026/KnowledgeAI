@@ -1,17 +1,19 @@
-from urllib.parse import urlparse
-
+from core.database import Database
+from core.source_manager import SourceManager
 from core.summarizer import Summarizer
 from core.keyword_extractor import KeywordExtractor
 from core.keyword_filter import KeywordFilter
 from core.keyword_ranker import KeywordRanker
-from core.database import Database
-from core.source_manager import SourceManager
 
 
 class KnowledgeGenerator:
 
 
     def __init__(self):
+
+        self.database = Database()
+
+        self.source_manager = SourceManager()
 
         self.summarizer = Summarizer()
 
@@ -21,24 +23,25 @@ class KnowledgeGenerator:
 
         self.keyword_ranker = KeywordRanker()
 
-        self.database = Database()
-
-        self.source_manager = SourceManager()
 
 
-
-    def get_articles(self, topic):
+    def get_articles_by_job(
+        self,
+        job_id
+    ):
 
         self.database.cursor.execute(
             """
-            SELECT id, title, url, content
+            SELECT
+                id,
+                title,
+                url,
+                content
             FROM articles
-            WHERE title LIKE ?
-            OR content LIKE ?
+            WHERE job_id=?
             """,
             (
-                f"%{topic}%",
-                f"%{topic}%"
+                job_id,
             )
         )
 
@@ -46,15 +49,22 @@ class KnowledgeGenerator:
 
 
 
-    def create_knowledge(self, topic):
+    def create_knowledge(
+        self,
+        topic,
+        job_id
+    ):
 
-        articles = self.get_articles(topic)
+
+        articles = self.get_articles_by_job(
+            job_id
+        )
 
 
         if not articles:
 
             print(
-                "No articles found"
+                "No articles found for job"
             )
 
             return None
@@ -75,6 +85,7 @@ class KnowledgeGenerator:
         )
 
 
+
         keywords = self.keyword_extractor.extract(
             combined,
             20
@@ -90,6 +101,7 @@ class KnowledgeGenerator:
             keywords,
             10
         )
+
 
 
         title = (
@@ -108,16 +120,18 @@ class KnowledgeGenerator:
                 title,
                 summary,
                 content,
-                keywords
+                keywords,
+                job_id
             )
-            VALUES (?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?)
             """,
             (
                 topic,
                 title,
                 summary,
                 combined,
-                ", ".join(keywords)
+                ", ".join(keywords),
+                job_id
             )
         )
 
@@ -129,30 +143,33 @@ class KnowledgeGenerator:
 
 
 
-        # ذخیره منابع گزارش
-
-        for article_id, article_title, url, content in articles:
-
-            if url:
-
-                self.source_manager.add_source(
-                    knowledge_id,
-                    article_title,
-                    url
-                )
-
-
-
         print(
             "Knowledge created:",
             knowledge_id
         )
 
 
+
         print(
-            "Keywords:",
-            keywords
+            "Saving sources..."
         )
+
+
+
+        for article_id, source_title, url, content in articles:
+
+
+            self.source_manager.add_source(
+
+                knowledge_id,
+
+                job_id,
+
+                source_title,
+
+                url
+            )
+
 
 
         print(
@@ -161,14 +178,26 @@ class KnowledgeGenerator:
         )
 
 
+
+        print(
+            "Keywords:",
+            keywords
+        )
+
+
+
         return knowledge_id
+
 
 
 
 if __name__ == "__main__":
 
+
     generator = KnowledgeGenerator()
 
+
     generator.create_knowledge(
-        "Artificial Intelligence"
+        "Artificial Intelligence",
+        6
     )

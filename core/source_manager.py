@@ -19,15 +19,10 @@ class SourceManager:
         trusted = {
 
             "wikipedia.org": 5,
-
             "nist.gov": 5,
-
             "ibm.com": 5,
-
             "nature.com": 5,
-
             "scientificamerican.com": 4,
-
             "geeksforgeeks.org": 3
 
         }
@@ -47,6 +42,7 @@ class SourceManager:
     def add_source(
         self,
         knowledge_id,
+        job_id,
         title,
         url
     ):
@@ -65,15 +61,17 @@ class SourceManager:
             INSERT INTO knowledge_sources
             (
                 knowledge_id,
+                job_id,
                 title,
                 url,
                 domain,
                 quality_score
             )
-            VALUES (?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?)
             """,
             (
                 knowledge_id,
+                job_id,
                 title,
                 url,
                 domain,
@@ -92,7 +90,6 @@ class SourceManager:
 if __name__ == "__main__":
 
     manager = SourceManager()
-
 
     print(
         manager.quality_score(

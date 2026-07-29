@@ -13,22 +13,23 @@ class Pipeline:
     def __init__(self):
 
         self.search = SearchEngine()
-
         self.downloader = Downloader()
-
         self.extractor = Extractor()
-
         self.cleaner = Cleaner()
-
         self.classifier = Classifier()
-
         self.database = Database()
-
         self.info = ArticleInfo()
 
+        self.last_job_id = None
 
 
-    def process_article(self, url):
+
+    def process_article(
+        self,
+        url,
+        job_id=None
+    ):
+
 
         print("\nURL:")
         print(url)
@@ -44,13 +45,17 @@ class Pipeline:
 
         if not html:
 
-            print("Download failed")
+            print(
+                "Download failed"
+            )
 
             return None
 
 
 
-        print("[2] Extracting metadata...")
+        print(
+            "[2] Extracting metadata..."
+        )
 
 
         metadata = self.info.extract(
@@ -70,8 +75,9 @@ class Pipeline:
         )
 
 
-
-        print("[3] Extracting text...")
+        print(
+            "[3] Extracting text..."
+        )
 
 
         text = self.extractor.extract(
@@ -89,7 +95,9 @@ class Pipeline:
 
 
 
-        print("[4] Cleaning...")
+        print(
+            "[4] Cleaning..."
+        )
 
 
         clean_text = self.cleaner.clean(
@@ -98,7 +106,9 @@ class Pipeline:
 
 
 
-        print("[5] Classifying...")
+        print(
+            "[5] Classifying..."
+        )
 
 
         category = self.classifier.classify(
@@ -107,7 +117,9 @@ class Pipeline:
 
 
 
-        print("[6] Saving...")
+        print(
+            "[6] Saving..."
+        )
 
 
         article_id = self.database.add_article(
@@ -115,7 +127,8 @@ class Pipeline:
             url,
             clean_text,
             "",
-            category
+            category,
+            job_id
         )
 
 
@@ -130,51 +143,108 @@ class Pipeline:
 
 
 
-    def run(self, topic, limit=5):
+    def run(
+        self,
+        topic,
+        limit=5
+    ):
 
 
-        print(
-            "Searching:",
+        job_id = self.database.create_job(
             topic
         )
 
 
-        urls = self.search.search(
-            topic,
-            limit
-        )
+        self.last_job_id = job_id
 
 
         print(
-            "Found:",
-            len(urls),
-            "articles"
+            "Job created:",
+            job_id
         )
 
 
-        results = []
+        try:
 
-
-        for url in urls:
-
-            article_id = self.process_article(
-                url
+            print(
+                "Searching:",
+                topic
             )
 
 
-            if article_id:
+            urls = self.search.search(
+                topic,
+                limit
+            )
 
-                results.append(
-                    article_id
+
+            print(
+                "Found:",
+                len(urls),
+                "articles"
+            )
+
+
+            results = []
+
+
+            for url in urls:
+
+                article_id = self.process_article(
+                    url,
+                    job_id
                 )
 
 
-        return results
+                if article_id:
+
+                    results.append(
+                        article_id
+                    )
+
+
+
+            self.database.update_job_status(
+                job_id,
+                "completed"
+            )
+
+
+            print(
+                "Job completed:",
+                job_id
+            )
+
+
+            return results
+
+
+
+        except Exception as e:
+
+
+            self.database.update_job_status(
+                job_id,
+                "failed"
+            )
+
+
+            print(
+                "Pipeline error:",
+                e
+            )
+
+
+            return []
 
 
 
 
-    def process(self, topic, url=None):
+
+    def process(
+        self,
+        topic
+    ):
 
         print(
             "Processing:",
@@ -182,17 +252,11 @@ class Pipeline:
         )
 
 
-        if url:
-
-            return self.process_article(
-                url
-            )
-
-
         return self.run(
             topic,
             5
         )
+
 
 
 

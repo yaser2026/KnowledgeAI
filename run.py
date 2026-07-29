@@ -6,7 +6,7 @@ from generate_pdf import PDFGenerator
 def main():
 
     print("=" * 50)
-    print("KnowledgeAI V2.1")
+    print("KnowledgeAI V2.3")
     print("=" * 50)
 
 
@@ -36,8 +36,9 @@ def main():
     pipeline = Pipeline()
 
 
-    articles = pipeline.process(
-        topic
+    articles = pipeline.run(
+        topic,
+        5
     )
 
 
@@ -51,6 +52,9 @@ def main():
 
 
 
+    job_id = pipeline.last_job_id
+
+
     print()
 
     print(
@@ -62,7 +66,8 @@ def main():
 
 
     knowledge_id = generator.create_knowledge(
-        topic
+        topic,
+        job_id
     )
 
 
@@ -94,7 +99,11 @@ def main():
     print()
 
     print("=" * 50)
-    print("KnowledgeAI completed successfully")
+
+    print(
+        "KnowledgeAI completed successfully"
+    )
+
     print("=" * 50)
 
 
