@@ -1,10 +1,12 @@
 from core.pipeline import Pipeline
+from core.knowledge_generator import KnowledgeGenerator
+from generate_pdf import PDFGenerator
 
 
 def main():
 
     print("=" * 50)
-    print("KnowledgeAI V1.0")
+    print("KnowledgeAI V2.0")
     print("=" * 50)
 
 
@@ -14,26 +16,89 @@ def main():
 
 
     if not topic:
-        print("No topic entered")
+
+        print(
+            "No topic entered"
+        )
+
         return
 
-
-    print()
-    print(
-        "Processing:",
-        topic
-    )
 
 
     pipeline = Pipeline()
 
 
-    pipeline.process(
-        topic,
-        "https://example.com"
+    print()
+
+    print(
+        "Collecting articles for:",
+        topic
     )
+
+
+    articles = pipeline.process(
+        topic
+    )
+
+
+    if not articles:
+
+        print(
+            "No articles collected"
+        )
+
+        return
+
+
+
+    print()
+
+    print(
+        "Generating knowledge..."
+    )
+
+
+    generator = KnowledgeGenerator()
+
+
+    knowledge_id = generator.create_knowledge(
+        topic
+    )
+
+
+    if not knowledge_id:
+
+        print(
+            "Knowledge generation failed"
+        )
+
+        return
+
+
+
+    print()
+
+    print(
+        "Generating PDF..."
+    )
+
+
+    pdf = PDFGenerator()
+
+
+    pdf.generate(
+        knowledge_id
+    )
+
+
+    print()
+
+    print("=" * 50)
+    print("KnowledgeAI completed successfully")
+    print("=" * 50)
 
 
 
 if __name__ == "__main__":
+
     main()

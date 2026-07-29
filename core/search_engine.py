@@ -1,38 +1,54 @@
-from urllib.parse import quote
+from core.providers.duckduckgo import DuckDuckGoProvider
 
 
 class SearchEngine:
 
+
     def __init__(self):
-        self.engines = {
-            "google": "https://www.google.com/search?q=",
-            "bing": "https://www.bing.com/search?q="
+
+        self.providers = {
+            "duckduckgo":
+            DuckDuckGoProvider()
         }
 
 
-    def create_search_url(self, query, engine="google"):
 
-        if engine not in self.engines:
-            engine = "google"
+    def search(
+        self,
+        query,
+        limit=5,
+        provider="duckduckgo"
+    ):
 
-        return self.engines[engine] + quote(query)
+        engine = self.providers.get(
+            provider
+        )
 
 
-    def search_info(self, query):
+        if not engine:
 
-        return {
-            "query": query,
-            "engine": "google",
-            "url": self.create_search_url(query)
-        }
+            return []
+
+
+        return engine.search(
+            query,
+            limit
+        )
+
 
 
 if __name__ == "__main__":
 
+
     search = SearchEngine()
 
-    result = search.search_info(
-        "Artificial Intelligence"
+
+    results = search.search(
+        "Artificial Intelligence",
+        5
     )
 
-    print(result)
+
+    for item in results:
+
+        print(item)
