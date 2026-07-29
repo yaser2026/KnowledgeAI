@@ -1,17 +1,15 @@
 from core.query_analyzer import QueryAnalyzer
 from core.reranker import ReRanker
 from core.context_builder import ContextBuilder
-
 from core.citation import CitationManager
 from core.citation_deduplicator import CitationDeduplicator
 
 from core.answer_generator import AnswerGenerator
 from core.answer_synthesizer import AnswerSynthesizer
 from core.answer_cleaner import AnswerCleaner
-
 from core.response_formatter import ResponseFormatter
-from core.sentence_selector import SentenceSelector
 
+from core.sentence_selector import SentenceSelector
 from core.content_quality_filter import ContentQualityFilter
 
 from core.research_adapter import ResearchAdapter
@@ -25,12 +23,12 @@ from core.confidence import ConfidenceEngine
 
 class ResearchPipeline:
 
+
     def __init__(self):
 
         self.analyzer = QueryAnalyzer()
 
         self.search = SearchEngine()
-
         self.adapter = ResearchAdapter()
 
         self.source_diversity = SourceDiversity()
@@ -38,6 +36,7 @@ class ResearchPipeline:
         self.reranker = ReRanker()
 
         self.evidence = EvidenceMerger()
+        self.evidence_ranker = EvidenceRanker()
 
         self.confidence = ConfidenceEngine()
 
@@ -48,7 +47,6 @@ class ResearchPipeline:
         self.selector = SentenceSelector()
 
         self.citation = CitationManager()
-
         self.citation_dedup = CitationDeduplicator()
 
         self.answer = AnswerGenerator()
@@ -61,7 +59,12 @@ class ResearchPipeline:
 
 
 
-    def run(self, question, limit=5):
+    def run(
+        self,
+        question,
+        limit=5
+    ):
+
 
         analysis = self.analyzer.analyze(
             question
@@ -93,33 +96,39 @@ class ResearchPipeline:
             diverse
         )
 
-        merged = self.evidence_ranker.rank(
+
+        ranked_evidence = self.evidence_ranker.rank(
             merged
         )
 
-        merged = self.evidence_ranker.rank(
-            merged
+
+        filtered_evidence = self.quality_filter.filter(
+            ranked_evidence
         )
 
 
         confidence_score = self.confidence.calculate(
-            merged
+            filtered_evidence
         )
 
 
         context = self.context.build(
-            merged
-        )
-
-
-        filtered = self.quality_filter.filter(
-            context["context"]
+            filtered_evidence
         )
 
 
         selected = self.selector.select(
-            filtered
+            filtered_evidence
         )
+
+
+        print("\n===== DEBUG SELECTED =====")
+
+        for item in selected:
+            print(item)
+
+        print("\n===== DEBUG CITATION INPUT =====")
+
 
 
         citations_raw = self.citation.format(
@@ -127,9 +136,18 @@ class ResearchPipeline:
         )
 
 
+        print(citations_raw)
+
+
         citations = self.citation_dedup.deduplicate(
             citations_raw.split("\n")
         )
+
+
+        print("\n===== DEBUG FINAL CITATIONS =====")
+
+        print(citations)
+
 
 
         sentences = self.synthesizer.synthesize(
@@ -139,12 +157,15 @@ class ResearchPipeline:
 
         raw_answer = self.answer.build_answer(
             question,
+
             [
                 {
                     "text": x
                 }
+
                 for x in sentences
             ],
+
             "\n".join(citations)
         )
 
@@ -166,11 +187,11 @@ class ResearchPipeline:
 
             "results": diverse,
 
-            "evidence": merged,
+            "evidence": filtered_evidence,
 
             "confidence": confidence_score,
 
-            "evidence_count": len(merged),
+            "evidence_count": len(filtered_evidence),
 
             "context": context,
 
@@ -184,7 +205,9 @@ class ResearchPipeline:
 
 if __name__ == "__main__":
 
+
     pipeline = ResearchPipeline()
+
 
     result = pipeline.run(
         "What is Linux kernel?",
@@ -192,15 +215,24 @@ if __name__ == "__main__":
     )
 
 
-    print(result["answer"])
+    print("\n===== RESULT =====")
+
+    print(
+        "Confidence:",
+        result["confidence"]
+    )
+
+    print(
+        "Evidence:",
+        result["evidence_count"]
+    )
 
     print()
 
-    print("Confidence:",
-          result["confidence"])
 
-    print("Evidence:",
-          result["evidence_count"])
+    for item in result["evidence"]:
+        print(item)
+
 
     print()
 

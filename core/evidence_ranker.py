@@ -21,18 +21,31 @@ class EvidenceRanker:
             0
         )
 
+        source_score = item.get(
+            "source_score",
+            0.5
+        )
+
+
+        support_score = min(
+            support / 5,
+            1
+        )
+
 
         score = (
-            confidence * 0.5
+            confidence * 0.35
             +
-            min(support / 5, 1) * 0.3
+            support_score * 0.25
             +
-            quality * 0.2
+            quality * 0.25
+            +
+            source_score * 0.15
         )
 
 
         return round(
-            score,
+            min(score, 1.0),
             2
         )
 

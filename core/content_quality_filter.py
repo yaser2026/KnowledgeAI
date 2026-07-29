@@ -8,6 +8,7 @@ class ContentQualityFilter:
         pass
 
 
+
     def is_bad(self, text):
 
         if not text:
@@ -25,29 +26,35 @@ class ContentQualityFilter:
 
 
         bad_patterns = [
+
             "about contact",
             "site news",
             "atom feed",
             "mailing lists",
             "patchwork",
             "bugzilla",
-            "social site"
+            "social site",
+
         ]
 
 
         for p in bad_patterns:
+
             if p in lower:
                 return True
+
 
 
         words = text.split()
 
 
         if len(words) > 20:
+
             unique_ratio = len(set(words)) / len(words)
 
             if unique_ratio < 0.25:
                 return True
+
 
 
         return False
@@ -58,15 +65,34 @@ class ContentQualityFilter:
 
         results = []
 
+
         for item in items:
+
 
             text = item.get(
                 "text",
                 ""
             )
 
+
+            if not text:
+
+                text = item.get(
+                    "content",
+                    ""
+                )
+
+
             if not self.is_bad(text):
-                results.append(item)
+
+                new_item = dict(item)
+
+                new_item["text"] = text
+
+
+                results.append(
+                    new_item
+                )
 
 
         return results

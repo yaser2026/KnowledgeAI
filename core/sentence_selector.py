@@ -3,13 +3,11 @@ import re
 
 class SentenceSelector:
 
-
     def __init__(
         self,
         max_sentences=5
     ):
         self.max_sentences = max_sentences
-
 
 
     def clean_sentence(self, text):
@@ -47,12 +45,10 @@ class SentenceSelector:
 
 
 
-    def select(
-        self,
-        data
-    ):
+    def select(self, data):
 
         results = []
+
         seen = set()
 
 
@@ -62,6 +58,7 @@ class SentenceSelector:
                 "text",
                 ""
             )
+
 
             sentences = self.split_sentences(
                 text
@@ -85,22 +82,49 @@ class SentenceSelector:
                 seen.add(key)
 
 
-                results.append(
-                    {
-                        "text": sentence,
-                        "source": item.get(
-                            "source",
-                            ""
-                        ),
-                        "score": item.get(
+                result = dict(item)
+
+
+                # حفظ متن انتخاب شده
+                result["text"] = sentence
+
+
+                # حفظ امتیاز واقعی evidence
+                result["score"] = item.get(
+                    "evidence_score",
+                    item.get(
+                        "final_score",
+                        item.get(
                             "score",
                             0
                         )
-                    }
+                    )
+                )
+
+
+                # حفظ عنوان و URL منبع
+                result["title"] = item.get(
+                    "title",
+                    item.get(
+                        "source",
+                        "Unknown Source"
+                    )
+                )
+
+
+                result["url"] = item.get(
+                    "url",
+                    ""
+                )
+
+
+                results.append(
+                    result
                 )
 
 
                 if len(results) >= self.max_sentences:
+
                     return results
 
 

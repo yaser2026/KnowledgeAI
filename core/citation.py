@@ -1,6 +1,5 @@
 class CitationManager:
 
-
     def __init__(self):
         pass
 
@@ -9,8 +8,11 @@ class CitationManager:
 
         return {
             "title": source.get(
-                "source",
-                "Unknown Source"
+                "title",
+                source.get(
+                    "source",
+                    "Unknown Source"
+                )
             ),
 
             "url": source.get(
@@ -19,8 +21,14 @@ class CitationManager:
             ),
 
             "score": source.get(
-                "score",
-                0
+                "evidence_score",
+                source.get(
+                    "final_score",
+                    source.get(
+                        "score",
+                        0
+                    )
+                )
             )
         }
 
@@ -38,24 +46,25 @@ class CitationManager:
                 source
             )
 
+
             text = (
                 f"[{index}] "
                 f"{item['title']}"
             )
 
-            if item["url"]:
 
+            if item["url"]:
                 text += (
                     f" | {item['url']}"
                 )
+
 
             text += (
                 f" | Score: {item['score']}"
             )
 
-            citations.append(
-                text
-            )
+
+            citations.append(text)
 
 
         return "\n".join(citations)
