@@ -19,6 +19,7 @@ from core.source_diversity import SourceDiversity
 from core.search_engine import SearchEngine
 
 from core.evidence_merger import EvidenceMerger
+from core.confidence import ConfidenceEngine
 
 
 class ResearchPipeline:
@@ -36,6 +37,8 @@ class ResearchPipeline:
         self.reranker = ReRanker()
 
         self.evidence = EvidenceMerger()
+
+        self.confidence = ConfidenceEngine()
 
         self.context = ContextBuilder()
 
@@ -56,64 +59,60 @@ class ResearchPipeline:
         self.formatter = ResponseFormatter()
 
 
+
     def run(self, question, limit=5):
 
-        # Query analysis
         analysis = self.analyzer.analyze(
             question
         )
 
 
-        # Search
         urls = self.search.search(
             question,
             limit
         )
 
 
-        # Convert sources
         results = self.adapter.convert(
             urls
         )
 
 
-        # Ranking
         ranked = self.reranker.rerank(
             results
         )
 
 
-        # Source diversity
         diverse = self.source_diversity.filter(
             ranked
         )
 
 
-        # Evidence merging
         merged = self.evidence.merge(
             diverse
         )
 
 
-        # Context building
+        confidence_score = self.confidence.calculate(
+            merged
+        )
+
+
         context = self.context.build(
             merged
         )
 
 
-        # Quality filtering
         filtered = self.quality_filter.filter(
             context["context"]
         )
 
 
-        # Sentence selection
         selected = self.selector.select(
             filtered
         )
 
 
-        # Citations
         citations_raw = self.citation.format(
             selected
         )
@@ -124,7 +123,6 @@ class ResearchPipeline:
         )
 
 
-        # Answer synthesis
         sentences = self.synthesizer.synthesize(
             selected
         )
@@ -161,6 +159,10 @@ class ResearchPipeline:
 
             "evidence": merged,
 
+            "confidence": confidence_score,
+
+            "evidence_count": len(merged),
+
             "context": context,
 
             "answer": response["answer"],
@@ -182,6 +184,14 @@ if __name__ == "__main__":
 
 
     print(result["answer"])
+
+    print()
+
+    print("Confidence:",
+          result["confidence"])
+
+    print("Evidence:",
+          result["evidence_count"])
 
     print()
 
