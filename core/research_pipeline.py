@@ -1,25 +1,29 @@
 from core.query_analyzer import QueryAnalyzer
 from core.reranker import ReRanker
 from core.context_builder import ContextBuilder
+
 from core.citation import CitationManager
-from core.answer_cleaner import AnswerCleaner
+from core.citation_deduplicator import CitationDeduplicator
+
 from core.answer_generator import AnswerGenerator
+from core.answer_synthesizer import AnswerSynthesizer
+from core.answer_cleaner import AnswerCleaner
 from core.response_formatter import ResponseFormatter
+
 from core.sentence_selector import SentenceSelector
 from core.content_quality_filter import ContentQualityFilter
+
 from core.research_adapter import ResearchAdapter
 from core.search_engine import SearchEngine
 
 
 class ResearchPipeline:
 
-
     def __init__(self):
 
         self.analyzer = QueryAnalyzer()
 
         self.search = SearchEngine()
-
         self.adapter = ResearchAdapter()
 
         self.reranker = ReRanker()
@@ -27,25 +31,19 @@ class ResearchPipeline:
         self.context = ContextBuilder()
 
         self.quality_filter = ContentQualityFilter()
-
         self.selector = SentenceSelector()
 
         self.citation = CitationManager()
+        self.citation_dedup = CitationDeduplicator()
 
         self.answer = AnswerGenerator()
+        self.synthesizer = AnswerSynthesizer()
 
         self.cleaner = AnswerCleaner()
-
         self.formatter = ResponseFormatter()
 
 
-
-    def run(
-        self,
-        question,
-        limit=5
-    ):
-
+    def run(self, question, limit=5):
 
         analysis = self.analyzer.analyze(
             question
@@ -68,13 +66,13 @@ class ResearchPipeline:
         )
 
 
-        context_data = self.context.build(
+        context = self.context.build(
             ranked
         )
 
 
         filtered = self.quality_filter.filter(
-            context_data["context"]
+            context["context"]
         )
 
 
@@ -83,15 +81,32 @@ class ResearchPipeline:
         )
 
 
-        citations = self.citation.format(
+        # citation generation
+
+        citations_raw = self.citation.format(
+            selected
+        )
+
+
+        citations = self.citation_dedup.deduplicate(
+            citations_raw.split("\n")
+        )
+
+
+        # answer synthesis
+
+        sentences = self.synthesizer.synthesize(
             selected
         )
 
 
         raw_answer = self.answer.build_answer(
             question,
-            selected,
-            citations
+            [
+                {"text": x}
+                for x in sentences
+            ],
+            "\n".join(citations)
         )
 
 
@@ -112,14 +127,7 @@ class ResearchPipeline:
 
             "results": ranked,
 
-            "context": {
-                "context": selected,
-                "count": len(selected),
-                "chars": sum(
-                    len(x.get("text", ""))
-                    for x in selected
-                )
-            },
+            "context": context,
 
             "answer": response["answer"],
 
@@ -128,21 +136,15 @@ class ResearchPipeline:
         }
 
 
-
 if __name__ == "__main__":
 
+    p = ResearchPipeline()
 
-    pipeline = ResearchPipeline()
-
-
-    result = pipeline.run(
+    r = p.run(
         "What is Linux kernel?",
         3
     )
 
-
-    print(result["answer"])
-
+    print(r["answer"])
     print()
-
-    print(result["citations"])
+    print(r["citations"])
