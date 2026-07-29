@@ -29,7 +29,8 @@ class PDFBuilder:
         summary,
         keywords,
         content,
-        filename
+        filename,
+        sources=None
     ):
 
 
@@ -49,6 +50,7 @@ class PDFBuilder:
         story = []
 
 
+
         story.append(
             Paragraph(
                 title,
@@ -56,9 +58,11 @@ class PDFBuilder:
             )
         )
 
+
         story.append(
             Spacer(1, 12)
         )
+
 
 
         story.append(
@@ -82,6 +86,7 @@ class PDFBuilder:
         )
 
 
+
         story.append(
             Paragraph(
                 "<b>Keywords</b>",
@@ -103,6 +108,7 @@ class PDFBuilder:
         )
 
 
+
         story.append(
             Paragraph(
                 "<b>Content</b>",
@@ -119,6 +125,52 @@ class PDFBuilder:
         )
 
 
+        story.append(
+            Spacer(1, 12)
+        )
+
+
+
+        # References
+
+        if sources:
+
+
+            story.append(
+                Paragraph(
+                    "<b>References</b>",
+                    styles["Heading2"]
+                )
+            )
+
+
+            for index, source in enumerate(
+                sources,
+                1
+            ):
+
+                text = (
+                    f"{index}. {source['title']}<br/>"
+                    f"URL: {source['url']}<br/>"
+                    f"Domain: {source['domain']}<br/>"
+                    f"Quality Score: {source['quality_score']}/5"
+                )
+
+
+                story.append(
+                    Paragraph(
+                        text,
+                        styles["BodyText"]
+                    )
+                )
+
+
+                story.append(
+                    Spacer(1, 8)
+                )
+
+
+
         doc.build(
             story
         )
@@ -130,14 +182,25 @@ class PDFBuilder:
         )
 
 
+
 if __name__ == "__main__":
 
+
     pdf = PDFBuilder()
+
 
     pdf.build(
         "Test Report",
         "This is summary",
         "AI, Machine Learning",
         "KnowledgeAI content",
-        "test.pdf"
+        "test.pdf",
+        [
+            {
+                "title": "Wikipedia",
+                "url": "https://wikipedia.org",
+                "domain": "wikipedia.org",
+                "quality_score": 5
+            }
+        ]
     )

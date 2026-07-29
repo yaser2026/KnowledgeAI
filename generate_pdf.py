@@ -13,7 +13,49 @@ class PDFGenerator:
 
 
 
+    def get_sources(self, knowledge_id):
+
+        self.database.cursor.execute(
+            """
+            SELECT
+            title,
+            url,
+            domain,
+            quality_score
+            FROM knowledge_sources
+            WHERE knowledge_id = ?
+            """,
+            (
+                knowledge_id,
+            )
+        )
+
+
+        rows = self.database.cursor.fetchall()
+
+
+        sources = []
+
+
+        for row in rows:
+
+            sources.append(
+                {
+                    "title": row[0],
+                    "url": row[1],
+                    "domain": row[2],
+                    "quality_score": row[3]
+                }
+            )
+
+
+        return sources
+
+
+
+
     def generate(self, article_id):
+
 
         self.database.cursor.execute(
             """
@@ -25,7 +67,9 @@ class PDFGenerator:
             FROM knowledge_articles
             WHERE id = ?
             """,
-            (article_id,)
+            (
+                article_id,
+            )
         )
 
 
@@ -34,13 +78,22 @@ class PDFGenerator:
 
         if not article:
 
-            print("Article not found")
+            print(
+                "Article not found"
+            )
 
             return
 
 
 
         title, summary, keywords, content = article
+
+
+
+        sources = self.get_sources(
+            article_id
+        )
+
 
 
         filename = (
@@ -52,12 +105,14 @@ class PDFGenerator:
         )
 
 
+
         self.pdf.build(
             title,
             summary,
             keywords,
             content,
-            filename
+            filename,
+            sources
         )
 
 

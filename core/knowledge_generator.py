@@ -1,8 +1,11 @@
+from urllib.parse import urlparse
+
 from core.summarizer import Summarizer
 from core.keyword_extractor import KeywordExtractor
 from core.keyword_filter import KeywordFilter
 from core.keyword_ranker import KeywordRanker
 from core.database import Database
+from core.source_manager import SourceManager
 
 
 class KnowledgeGenerator:
@@ -20,13 +23,15 @@ class KnowledgeGenerator:
 
         self.database = Database()
 
+        self.source_manager = SourceManager()
+
 
 
     def get_articles(self, topic):
 
         self.database.cursor.execute(
             """
-            SELECT title, content
+            SELECT id, title, url, content
             FROM articles
             WHERE title LIKE ?
             OR content LIKE ?
@@ -48,7 +53,9 @@ class KnowledgeGenerator:
 
         if not articles:
 
-            print("No articles found")
+            print(
+                "No articles found"
+            )
 
             return None
 
@@ -56,7 +63,7 @@ class KnowledgeGenerator:
 
         combined = ""
 
-        for title, content in articles:
+        for article_id, title, url, content in articles:
 
             combined += "\n" + content
 
@@ -85,12 +92,12 @@ class KnowledgeGenerator:
         )
 
 
-
         title = (
             "Knowledge Report: "
             +
             topic
         )
+
 
 
         self.database.cursor.execute(
@@ -118,9 +125,27 @@ class KnowledgeGenerator:
         self.database.conn.commit()
 
 
+        knowledge_id = self.database.cursor.lastrowid
+
+
+
+        # ذخیره منابع گزارش
+
+        for article_id, article_title, url, content in articles:
+
+            if url:
+
+                self.source_manager.add_source(
+                    knowledge_id,
+                    article_title,
+                    url
+                )
+
+
+
         print(
             "Knowledge created:",
-            self.database.cursor.lastrowid
+            knowledge_id
         )
 
 
@@ -130,7 +155,13 @@ class KnowledgeGenerator:
         )
 
 
-        return self.database.cursor.lastrowid
+        print(
+            "Sources saved:",
+            len(articles)
+        )
+
+
+        return knowledge_id
 
 
 
