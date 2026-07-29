@@ -4,38 +4,90 @@ import re
 class SentenceSelector:
 
 
-    def __init__(self, max_sentences=5):
+    def __init__(
+        self,
+        max_sentences=5
+    ):
         self.max_sentences = max_sentences
+
+
+
+    def clean_sentence(self, text):
+
+        text = text.strip()
+
+        text = re.sub(
+            r'^\-\s*',
+            '',
+            text
+        )
+
+        text = re.sub(
+            r'\s+',
+            ' ',
+            text
+        )
+
+        return text.strip()
+
 
 
     def split_sentences(self, text):
 
+        parts = re.split(
+            r'(?<=[.!?])\s+',
+            text
+        )
+
         return [
-            s.strip()
-            for s in re.split(
-                r'[.!?]\s+',
-                text
-            )
-            if len(s.strip()) > 20
+            p.strip()
+            for p in parts
+            if len(p.strip()) > 30
         ]
 
 
-    def select(self, context):
 
-        sentences = []
+    def select(
+        self,
+        data
+    ):
 
-        for item in context:
+        results = []
+        seen = set()
+
+
+        for item in data:
 
             text = item.get(
                 "text",
                 ""
             )
 
-            for s in self.split_sentences(text):
+            sentences = self.split_sentences(
+                text
+            )
 
-                sentences.append(
+
+            for sentence in sentences:
+
+                sentence = self.clean_sentence(
+                    sentence
+                )
+
+
+                key = sentence.lower()
+
+
+                if key in seen:
+                    continue
+
+
+                seen.add(key)
+
+
+                results.append(
                     {
-                        "text": s,
+                        "text": sentence,
                         "source": item.get(
                             "source",
                             ""
@@ -48,10 +100,8 @@ class SentenceSelector:
                 )
 
 
-        sentences.sort(
-            key=lambda x: x["score"],
-            reverse=True
-        )
+                if len(results) >= self.max_sentences:
+                    return results
 
 
-        return sentences[:self.max_sentences]
+        return results
