@@ -8,6 +8,7 @@ from reportlab.lib.styles import getSampleStyleSheet
 from pathlib import Path
 
 
+
 class PDFBuilder:
 
 
@@ -30,7 +31,8 @@ class PDFBuilder:
         keywords,
         content,
         filename,
-        sources=None
+        sources=None,
+        research=None
     ):
 
 
@@ -47,9 +49,12 @@ class PDFBuilder:
 
         styles = getSampleStyleSheet()
 
+
         story = []
 
 
+
+        # Title
 
         story.append(
             Paragraph(
@@ -60,10 +65,48 @@ class PDFBuilder:
 
 
         story.append(
-            Spacer(1, 12)
+            Spacer(1,12)
         )
 
 
+
+        # Research Score
+
+        if research:
+
+
+            story.append(
+                Paragraph(
+                    "<b>Research Quality</b>",
+                    styles["Heading2"]
+                )
+            )
+
+
+            research_text = (
+                f"Overall Score: {research['score']}/100<br/>"
+                f"Sources analyzed: {research['source_count']}<br/>"
+                f"Articles analyzed: {research['article_count']}<br/>"
+                f"Average source quality: "
+                f"{research['average_quality']}/5"
+            )
+
+
+            story.append(
+                Paragraph(
+                    research_text,
+                    styles["BodyText"]
+                )
+            )
+
+
+            story.append(
+                Spacer(1,12)
+            )
+
+
+
+        # Summary
 
         story.append(
             Paragraph(
@@ -82,10 +125,12 @@ class PDFBuilder:
 
 
         story.append(
-            Spacer(1, 12)
+            Spacer(1,12)
         )
 
 
+
+        # Keywords
 
         story.append(
             Paragraph(
@@ -104,10 +149,12 @@ class PDFBuilder:
 
 
         story.append(
-            Spacer(1, 12)
+            Spacer(1,12)
         )
 
 
+
+        # Content
 
         story.append(
             Paragraph(
@@ -126,7 +173,7 @@ class PDFBuilder:
 
 
         story.append(
-            Spacer(1, 12)
+            Spacer(1,12)
         )
 
 
@@ -149,11 +196,13 @@ class PDFBuilder:
                 1
             ):
 
+
                 text = (
                     f"{index}. {source['title']}<br/>"
                     f"URL: {source['url']}<br/>"
                     f"Domain: {source['domain']}<br/>"
-                    f"Quality Score: {source['quality_score']}/5"
+                    f"Quality Score: "
+                    f"{source['quality_score']}/5"
                 )
 
 
@@ -166,7 +215,7 @@ class PDFBuilder:
 
 
                 story.append(
-                    Spacer(1, 8)
+                    Spacer(1,8)
                 )
 
 
@@ -202,5 +251,11 @@ if __name__ == "__main__":
                 "domain": "wikipedia.org",
                 "quality_score": 5
             }
-        ]
+        ],
+        {
+            "score":100,
+            "source_count":1,
+            "article_count":1,
+            "average_quality":5
+        }
     )

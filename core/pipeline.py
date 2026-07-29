@@ -7,6 +7,7 @@ from core.database import Database
 from core.article_info import ArticleInfo
 
 
+
 class Pipeline:
 
 
@@ -30,13 +31,11 @@ class Pipeline:
         job_id=None
     ):
 
-
         print("\nURL:")
         print(url)
 
 
         print("[1] Downloading...")
-
 
         html = self.downloader.download(
             url
@@ -53,10 +52,7 @@ class Pipeline:
 
 
 
-        print(
-            "[2] Extracting metadata..."
-        )
-
+        print("[2] Extracting metadata...")
 
         metadata = self.info.extract(
             html
@@ -75,9 +71,8 @@ class Pipeline:
         )
 
 
-        print(
-            "[3] Extracting text..."
-        )
+
+        print("[3] Extracting text...")
 
 
         text = self.extractor.extract(
@@ -95,9 +90,7 @@ class Pipeline:
 
 
 
-        print(
-            "[4] Cleaning..."
-        )
+        print("[4] Cleaning...")
 
 
         clean_text = self.cleaner.clean(
@@ -106,9 +99,7 @@ class Pipeline:
 
 
 
-        print(
-            "[5] Classifying..."
-        )
+        print("[5] Classifying...")
 
 
         category = self.classifier.classify(
@@ -117,9 +108,7 @@ class Pipeline:
 
 
 
-        print(
-            "[6] Saving..."
-        )
+        print("[6] Saving...")
 
 
         article_id = self.database.add_article(
@@ -139,6 +128,7 @@ class Pipeline:
 
 
         return article_id
+
 
 
 
@@ -164,6 +154,7 @@ class Pipeline:
         )
 
 
+
         try:
 
             print(
@@ -185,10 +176,13 @@ class Pipeline:
             )
 
 
+
             results = []
 
 
+
             for url in urls:
+
 
                 article_id = self.process_article(
                     url,
@@ -256,6 +250,7 @@ class Pipeline:
             topic,
             5
         )
+
 
 
 

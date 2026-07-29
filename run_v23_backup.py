@@ -1,18 +1,19 @@
 from core.pipeline import Pipeline
 from core.knowledge_generator import KnowledgeGenerator
-from core.research_score import ResearchScore
 from generate_pdf import PDFGenerator
 
 
 def main():
 
     print("=" * 50)
-    print("KnowledgeAI V2.5")
+    print("KnowledgeAI V2.3")
     print("=" * 50)
+
 
     topic = input(
         "Enter topic: "
     ).strip()
+
 
     if not topic:
 
@@ -22,6 +23,8 @@ def main():
 
         return
 
+
+
     print()
 
     print(
@@ -29,12 +32,15 @@ def main():
         topic
     )
 
+
     pipeline = Pipeline()
+
 
     articles = pipeline.run(
         topic,
         5
     )
+
 
     if not articles:
 
@@ -44,7 +50,10 @@ def main():
 
         return
 
+
+
     job_id = pipeline.last_job_id
+
 
     print()
 
@@ -52,12 +61,15 @@ def main():
         "Generating knowledge..."
     )
 
+
     generator = KnowledgeGenerator()
+
 
     knowledge_id = generator.create_knowledge(
         topic,
         job_id
     )
+
 
     if not knowledge_id:
 
@@ -67,25 +79,7 @@ def main():
 
         return
 
-    print()
 
-    print(
-        "Calculating research score..."
-    )
-
-    scorer = ResearchScore()
-
-    result = scorer.calculate(
-        knowledge_id
-    )
-
-    print(
-        "Research Score:"
-    )
-
-    print(
-        result
-    )
 
     print()
 
@@ -93,17 +87,25 @@ def main():
         "Generating PDF..."
     )
 
+
     pdf = PDFGenerator()
+
 
     pdf.generate(
         knowledge_id
     )
 
+
     print()
 
     print("=" * 50)
-    print("KnowledgeAI completed successfully")
+
+    print(
+        "KnowledgeAI completed successfully"
+    )
+
     print("=" * 50)
+
 
 
 if __name__ == "__main__":

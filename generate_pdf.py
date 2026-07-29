@@ -18,10 +18,10 @@ class PDFGenerator:
         self.database.cursor.execute(
             """
             SELECT
-            title,
-            url,
-            domain,
-            quality_score
+                title,
+                url,
+                domain,
+                quality_score
             FROM knowledge_sources
             WHERE knowledge_id = ?
             """,
@@ -54,21 +54,72 @@ class PDFGenerator:
 
 
 
-    def generate(self, article_id):
+    def get_research_score(self, knowledge_id):
+
+        self.database.cursor.execute(
+            """
+            SELECT
+                source_count,
+                article_count,
+                average_quality,
+                score
+            FROM research_scores
+            WHERE knowledge_id = ?
+            """,
+            (
+                knowledge_id,
+            )
+        )
+
+
+        row = self.database.cursor.fetchone()
+
+
+        if not row:
+
+            return {
+
+                "source_count": 0,
+
+                "article_count": 0,
+
+                "average_quality": 0,
+
+                "score": 0
+            }
+
+
+
+        return {
+
+            "source_count": row[0],
+
+            "article_count": row[1],
+
+            "average_quality": row[2],
+
+            "score": row[3]
+
+        }
+
+
+
+
+    def generate(self, knowledge_id):
 
 
         self.database.cursor.execute(
             """
             SELECT
-            title,
-            summary,
-            keywords,
-            content
+                title,
+                summary,
+                keywords,
+                content
             FROM knowledge_articles
             WHERE id = ?
             """,
             (
-                article_id,
+                knowledge_id,
             )
         )
 
@@ -79,7 +130,7 @@ class PDFGenerator:
         if not article:
 
             print(
-                "Article not found"
+                "Knowledge article not found"
             )
 
             return
@@ -91,7 +142,12 @@ class PDFGenerator:
 
 
         sources = self.get_sources(
-            article_id
+            knowledge_id
+        )
+
+
+        research = self.get_research_score(
+            knowledge_id
         )
 
 
@@ -99,7 +155,7 @@ class PDFGenerator:
         filename = (
             "Knowledge_Report_"
             +
-            str(article_id)
+            str(knowledge_id)
             +
             ".pdf"
         )
@@ -112,8 +168,16 @@ class PDFGenerator:
             keywords,
             content,
             filename,
-            sources
+            sources,
+            research
         )
+
+
+        print(
+            "PDF created:",
+            filename
+        )
+
 
 
 
@@ -124,5 +188,5 @@ if __name__ == "__main__":
 
 
     generator.generate(
-        5
+        12
     )
