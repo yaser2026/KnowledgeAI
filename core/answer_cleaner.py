@@ -10,6 +10,7 @@ class AnswerCleaner:
             return ""
 
 
+        # Remove references like [16]:4
         text = re.sub(
             r'\[\d+\](?::\s*\d+)?',
             '',
@@ -17,25 +18,18 @@ class AnswerCleaner:
         )
 
 
-        text = re.sub(
-            r'\[[0-9,\s]+\]',
-            '',
-            text
-        )
-
-
-        patterns = [
-            r'Original author.*?(?=\.|$)',
-            r'Stable release.*?(?=\.|$)',
-            r'Written in.*?(?=\.|$)',
-            r'License.*?(?=\.|$)',
-            r'Website.*?(?=\.|$)',
-            r'Repository.*?(?=\.|$)'
+        # Remove metadata phrases but keep remaining sentence
+        remove_patterns = [
+            r'Original author\s+[^.]+\.?',
+            r'License\s+[^.]+\.?',
+            r'Stable release\s+[^.]+\.?',
+            r'Written in\s+[^.]+\.?',
+            r'Website\s+[^.]+\.?',
+            r'Repository\s+[^.]+\.?'
         ]
 
 
-        for pattern in patterns:
-
+        for pattern in remove_patterns:
             text = re.sub(
                 pattern,
                 '',
@@ -44,7 +38,7 @@ class AnswerCleaner:
             )
 
 
-        # Normalize punctuation
+        # Fix punctuation artifacts
         text = re.sub(
             r'\.{2,}',
             '.',
@@ -54,13 +48,6 @@ class AnswerCleaner:
 
         text = re.sub(
             r'\s+\.',
-            '.',
-            text
-        )
-
-
-        text = re.sub(
-            r'\.\s*\.',
             '.',
             text
         )
