@@ -2,6 +2,7 @@ from core.query_analyzer import QueryAnalyzer
 from core.reranker import ReRanker
 from core.context_builder import ContextBuilder
 from core.citation import CitationManager
+from core.research_adapter import ResearchAdapter
 from core.search_engine import SearchEngine
 
 
@@ -11,6 +12,7 @@ class ResearchPipeline:
 
         self.analyzer = QueryAnalyzer()
         self.search = SearchEngine()
+        self.adapter = ResearchAdapter()
         self.reranker = ReRanker()
         self.context = ContextBuilder()
         self.citation = CitationManager()
@@ -23,9 +25,14 @@ class ResearchPipeline:
         )
 
 
-        results = self.search.search(
+        urls = self.search.search(
             question,
             limit
+        )
+
+
+        results = self.adapter.convert(
+            urls
         )
 
 
@@ -41,5 +48,6 @@ class ResearchPipeline:
 
         return {
             "analysis": analysis,
+            "results": ranked,
             "context": context
         }
