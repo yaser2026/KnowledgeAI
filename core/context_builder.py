@@ -36,7 +36,7 @@ class ContextBuilder:
 
         for item in items:
 
-            key = item[:100].lower()
+            key = item["text"][:100].lower()
 
             if key not in seen:
 
@@ -48,7 +48,7 @@ class ContextBuilder:
 
     def build(self, results):
 
-        all_text = []
+        chunks = []
 
         for item in results:
 
@@ -57,46 +57,79 @@ class ContextBuilder:
                 ""
             )
 
-            if content:
+            if not content:
+                continue
 
-                text = self.clean_text(
-                    content
+
+            text = self.clean_text(
+                content
+            )
+
+
+            sentences = self.split_sentences(
+                text
+            )
+
+
+            for sentence in sentences:
+
+                if len(sentence.strip()) < 40:
+                    continue
+
+
+                chunks.append(
+                    {
+                        "text": sentence.strip(),
+                        "source": item.get(
+                            "title",
+                            "Unknown"
+                        ),
+                        "url": item.get(
+                            "url",
+                            ""
+                        ),
+                        "score": item.get(
+                            "final_score",
+                            0
+                        )
+                    }
                 )
 
-                sentences = self.split_sentences(
-                    text
-                )
 
-                all_text.extend(
-                    sentences
-                )
-
-
-        all_text = self.remove_duplicates(
-            all_text
+        chunks = self.remove_duplicates(
+            chunks
         )
 
 
-        context = []
+        selected = []
 
         size = 0
 
-        for sentence in all_text:
 
-            if len(context) >= self.max_chunks:
+        for chunk in chunks:
+
+            if len(selected) >= self.max_chunks:
                 break
 
 
-            if size + len(sentence) > self.max_chars:
+            length = len(
+                chunk["text"]
+            )
+
+
+            if size + length > self.max_chars:
                 break
 
 
-            context.append(sentence)
-            size += len(sentence)
+            selected.append(
+                chunk
+            )
+
+            size += length
 
 
         return {
-            "context": context,
-            "count": len(context),
+            "context": selected,
+            "count": len(selected),
             "chars": size
         }
