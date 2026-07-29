@@ -19,6 +19,7 @@ from core.source_diversity import SourceDiversity
 from core.search_engine import SearchEngine
 
 from core.evidence_merger import EvidenceMerger
+from core.evidence_ranker import EvidenceRanker
 from core.confidence import ConfidenceEngine
 
 
@@ -90,6 +91,14 @@ class ResearchPipeline:
 
         merged = self.evidence.merge(
             diverse
+        )
+
+        merged = self.evidence_ranker.rank(
+            merged
+        )
+
+        merged = self.evidence_ranker.rank(
+            merged
         )
 
 
