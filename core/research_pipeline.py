@@ -11,7 +11,6 @@ from core.research_adapter import ResearchAdapter
 from core.search_engine import SearchEngine
 
 
-
 class ResearchPipeline:
 
 
@@ -69,13 +68,13 @@ class ResearchPipeline:
         )
 
 
-        context = self.context.build(
+        context_data = self.context.build(
             ranked
         )
 
 
         filtered = self.quality_filter.filter(
-            context["context"]
+            context_data["context"]
         )
 
 
@@ -108,11 +107,24 @@ class ResearchPipeline:
 
 
         return {
+
             "analysis": analysis,
+
             "results": ranked,
-            "context": selected,
+
+            "context": {
+                "context": selected,
+                "count": len(selected),
+                "chars": sum(
+                    len(x.get("text", ""))
+                    for x in selected
+                )
+            },
+
             "answer": response["answer"],
+
             "citations": response["citations"]
+
         }
 
 
@@ -129,12 +141,8 @@ if __name__ == "__main__":
     )
 
 
-    print(
-        result["answer"]
-    )
+    print(result["answer"])
 
     print()
 
-    print(
-        result["citations"]
-    )
+    print(result["citations"])
