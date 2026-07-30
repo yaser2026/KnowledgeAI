@@ -3,15 +3,10 @@ import re
 
 class SentenceSelector:
 
-    def __init__(
-        self,
-        max_sentences=5
-    ):
+    def __init__(self, max_sentences=5):
         self.max_sentences = max_sentences
 
-
     def clean_sentence(self, text):
-
         text = text.strip()
 
         text = re.sub(
@@ -28,10 +23,7 @@ class SentenceSelector:
 
         return text.strip()
 
-
-
     def split_sentences(self, text):
-
         parts = re.split(
             r'(?<=[.!?])\s+',
             text
@@ -43,89 +35,58 @@ class SentenceSelector:
             if len(p.strip()) > 30
         ]
 
-
-
     def select(self, data):
 
         results = []
 
-        seen = set()
-
+        seen_sentences = set()
+        seen_sources = set()
 
         for item in data:
 
-            text = item.get(
-                "text",
-                ""
+            text = item.get("text", "")
+
+            source = (
+                item.get("url")
+                or item.get("title")
+                or item.get("source")
+                or ""
             )
 
-
-            sentences = self.split_sentences(
-                text
-            )
-
+            sentences = self.split_sentences(text)
 
             for sentence in sentences:
 
-                sentence = self.clean_sentence(
-                    sentence
-                )
-
+                sentence = self.clean_sentence(sentence)
 
                 key = sentence.lower()
 
-
-                if key in seen:
+                if key in seen_sentences:
                     continue
 
+                if source in seen_sources:
+                    continue
 
-                seen.add(key)
+                seen_sentences.add(key)
+                seen_sources.add(source)
 
-
-                result = dict(item)
-
-
-                # حفظ متن انتخاب شده
-                result["text"] = sentence
-
-
-                # حفظ امتیاز واقعی evidence
-                result["score"] = item.get(
-                    "evidence_score",
-                    item.get(
-                        "final_score",
+                results.append({
+                    "text": sentence,
+                    "title": item.get(
+                        "title",
+                        item.get("source", "")
+                    ),
+                    "url": item.get("url", ""),
+                    "score": item.get(
+                        "evidence_score",
                         item.get(
                             "score",
                             0
                         )
                     )
-                )
-
-
-                # حفظ عنوان و URL منبع
-                result["title"] = item.get(
-                    "title",
-                    item.get(
-                        "source",
-                        "Unknown Source"
-                    )
-                )
-
-
-                result["url"] = item.get(
-                    "url",
-                    ""
-                )
-
-
-                results.append(
-                    result
-                )
-
+                })
 
                 if len(results) >= self.max_sentences:
-
                     return results
-
 
         return results

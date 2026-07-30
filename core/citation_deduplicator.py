@@ -1,6 +1,3 @@
-import re
-
-
 class CitationDeduplicator:
 
 
@@ -12,17 +9,14 @@ class CitationDeduplicator:
 
         text = text.strip()
 
-        text = re.sub(
-            r"^\[\d+\]\s*",
-            "",
-            text
-        )
+        if "|" in text:
 
-        source = text.split(
-            "|"
-        )[0].strip()
+            parts = text.split("|")
 
-        return source
+            return parts[0].strip()
+
+
+        return text
 
 
 
@@ -32,18 +26,13 @@ class CitationDeduplicator:
             return []
 
 
-        if isinstance(citations, str):
+        result=[]
 
-            citations = citations.split(
-                "\n"
-            )
-
-
-        result = []
-        seen = set()
+        seen=set()
 
 
         for item in citations:
+
 
             if not item:
                 continue
@@ -54,9 +43,12 @@ class CitationDeduplicator:
             )
 
 
-            if source not in seen:
+            key = source.lower()
 
-                seen.add(source)
+
+            if key not in seen:
+
+                seen.add(key)
 
                 result.append(
                     item

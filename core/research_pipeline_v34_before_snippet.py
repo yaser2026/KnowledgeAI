@@ -1,7 +1,6 @@
 from core.query_analyzer import QueryAnalyzer
 from core.reranker import ReRanker
 from core.context_builder import ContextBuilder
-
 from core.citation import CitationManager
 from core.citation_deduplicator import CitationDeduplicator
 
@@ -21,12 +20,9 @@ from core.evidence_merger import EvidenceMerger
 from core.evidence_ranker import EvidenceRanker
 from core.confidence import ConfidenceEngine
 
-from core.multi_source_fusion import MultiSourceFusion
-from core.source_deduplicator import SourceDeduplicator
-
-
 
 class ResearchPipeline:
+
 
     def __init__(self):
 
@@ -36,9 +32,6 @@ class ResearchPipeline:
         self.adapter = ResearchAdapter()
 
         self.source_diversity = SourceDiversity()
-
-        self.multi_source = MultiSourceFusion()
-        self.source_dedup = SourceDeduplicator()
 
         self.reranker = ReRanker()
 
@@ -57,9 +50,11 @@ class ResearchPipeline:
         self.citation_dedup = CitationDeduplicator()
 
         self.answer = AnswerGenerator()
+
         self.synthesizer = AnswerSynthesizer()
 
         self.cleaner = AnswerCleaner()
+
         self.formatter = ResponseFormatter()
 
 
@@ -69,6 +64,7 @@ class ResearchPipeline:
         question,
         limit=5
     ):
+
 
         analysis = self.analyzer.analyze(
             question
@@ -96,28 +92,13 @@ class ResearchPipeline:
         )
 
 
-        fused = self.multi_source.fuse(
-            diverse
-        )
-
-
-        fused = self.source_dedup.deduplicate(
-            fused
-        )
-
-
         merged = self.evidence.merge(
-            fused
+            diverse
         )
 
 
         ranked_evidence = self.evidence_ranker.rank(
             merged
-        )
-
-
-        ranked_evidence = self.source_dedup.deduplicate(
-            ranked_evidence
         )
 
 
@@ -146,8 +127,8 @@ class ResearchPipeline:
         for item in selected:
             print(item)
 
-
         print("\n===== DEBUG CITATION INPUT =====")
+
 
 
         citations_raw = self.citation.format(
@@ -168,6 +149,7 @@ class ResearchPipeline:
         print(citations)
 
 
+
         sentences = self.synthesizer.synthesize(
             selected
         )
@@ -180,6 +162,7 @@ class ResearchPipeline:
                 {
                     "text": x
                 }
+
                 for x in sentences
             ],
 
@@ -202,7 +185,7 @@ class ResearchPipeline:
 
             "analysis": analysis,
 
-            "results": fused,
+            "results": diverse,
 
             "evidence": filtered_evidence,
 
@@ -222,11 +205,13 @@ class ResearchPipeline:
 
 if __name__ == "__main__":
 
+
     pipeline = ResearchPipeline()
+
 
     result = pipeline.run(
         "What is Linux kernel?",
-        5
+        3
     )
 
 
@@ -244,8 +229,10 @@ if __name__ == "__main__":
 
     print()
 
+
     for item in result["evidence"]:
         print(item)
+
 
     print()
 

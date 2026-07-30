@@ -28,38 +28,55 @@ from core.source_deduplicator import SourceDeduplicator
 
 class ResearchPipeline:
 
+
     def __init__(self):
 
         self.analyzer = QueryAnalyzer()
 
         self.search = SearchEngine()
+
         self.adapter = ResearchAdapter()
+
 
         self.source_diversity = SourceDiversity()
 
         self.multi_source = MultiSourceFusion()
+
         self.source_dedup = SourceDeduplicator()
+
 
         self.reranker = ReRanker()
 
+
         self.evidence = EvidenceMerger()
+
         self.evidence_ranker = EvidenceRanker()
+
 
         self.confidence = ConfidenceEngine()
 
+
         self.context = ContextBuilder()
+
 
         self.quality_filter = ContentQualityFilter()
 
+
         self.selector = SentenceSelector()
 
+
         self.citation = CitationManager()
+
         self.citation_dedup = CitationDeduplicator()
 
+
         self.answer = AnswerGenerator()
+
         self.synthesizer = AnswerSynthesizer()
 
+
         self.cleaner = AnswerCleaner()
+
         self.formatter = ResponseFormatter()
 
 
@@ -69,6 +86,7 @@ class ResearchPipeline:
         question,
         limit=5
     ):
+
 
         analysis = self.analyzer.analyze(
             question
@@ -116,11 +134,6 @@ class ResearchPipeline:
         )
 
 
-        ranked_evidence = self.source_dedup.deduplicate(
-            ranked_evidence
-        )
-
-
         filtered_evidence = self.quality_filter.filter(
             ranked_evidence
         )
@@ -147,6 +160,7 @@ class ResearchPipeline:
             print(item)
 
 
+
         print("\n===== DEBUG CITATION INPUT =====")
 
 
@@ -166,6 +180,7 @@ class ResearchPipeline:
         print("\n===== DEBUG FINAL CITATIONS =====")
 
         print(citations)
+
 
 
         sentences = self.synthesizer.synthesize(
@@ -222,7 +237,9 @@ class ResearchPipeline:
 
 if __name__ == "__main__":
 
+
     pipeline = ResearchPipeline()
+
 
     result = pipeline.run(
         "What is Linux kernel?",
@@ -232,21 +249,30 @@ if __name__ == "__main__":
 
     print("\n===== RESULT =====")
 
+
     print(
         "Confidence:",
         result["confidence"]
     )
+
 
     print(
         "Evidence:",
         result["evidence_count"]
     )
 
+
     print()
+
 
     for item in result["evidence"]:
         print(item)
 
+
     print()
 
-    print(result["citations"])
+
+    print(
+        result["citations"]
+    )
+

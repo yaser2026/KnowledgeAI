@@ -1,7 +1,6 @@
 from core.query_analyzer import QueryAnalyzer
 from core.reranker import ReRanker
 from core.context_builder import ContextBuilder
-
 from core.citation import CitationManager
 from core.citation_deduplicator import CitationDeduplicator
 
@@ -21,31 +20,34 @@ from core.evidence_merger import EvidenceMerger
 from core.evidence_ranker import EvidenceRanker
 from core.confidence import ConfidenceEngine
 
-from core.multi_source_fusion import MultiSourceFusion
-from core.source_deduplicator import SourceDeduplicator
-
+from core.snippet_extractor import SnippetExtractor
 
 
 class ResearchPipeline:
+
 
     def __init__(self):
 
         self.analyzer = QueryAnalyzer()
 
         self.search = SearchEngine()
+
         self.adapter = ResearchAdapter()
 
         self.source_diversity = SourceDiversity()
 
-        self.multi_source = MultiSourceFusion()
-        self.source_dedup = SourceDeduplicator()
-
         self.reranker = ReRanker()
 
+
         self.evidence = EvidenceMerger()
+
         self.evidence_ranker = EvidenceRanker()
 
         self.confidence = ConfidenceEngine()
+
+
+        self.snippet = SnippetExtractor()
+
 
         self.context = ContextBuilder()
 
@@ -53,13 +55,18 @@ class ResearchPipeline:
 
         self.selector = SentenceSelector()
 
+
         self.citation = CitationManager()
+
         self.citation_dedup = CitationDeduplicator()
 
+
         self.answer = AnswerGenerator()
+
         self.synthesizer = AnswerSynthesizer()
 
         self.cleaner = AnswerCleaner()
+
         self.formatter = ResponseFormatter()
 
 
@@ -69,6 +76,7 @@ class ResearchPipeline:
         question,
         limit=5
     ):
+
 
         analysis = self.analyzer.analyze(
             question
@@ -96,18 +104,8 @@ class ResearchPipeline:
         )
 
 
-        fused = self.multi_source.fuse(
-            diverse
-        )
-
-
-        fused = self.source_dedup.deduplicate(
-            fused
-        )
-
-
         merged = self.evidence.merge(
-            fused
+            diverse
         )
 
 
@@ -116,9 +114,26 @@ class ResearchPipeline:
         )
 
 
-        ranked_evidence = self.source_dedup.deduplicate(
-            ranked_evidence
-        )
+        # V3.4 Snippet Extraction
+
+        for item in ranked_evidence:
+
+            snippets = self.snippet.extract(
+                item.get(
+                    "text",
+                    item.get(
+                        "content",
+                        ""
+                    )
+                ),
+                question
+            )
+
+            if snippets:
+
+                item["text"] = " ".join(
+                    snippets
+                )
 
 
         filtered_evidence = self.quality_filter.filter(
@@ -144,6 +159,7 @@ class ResearchPipeline:
         print("\n===== DEBUG SELECTED =====")
 
         for item in selected:
+
             print(item)
 
 
@@ -168,6 +184,7 @@ class ResearchPipeline:
         print(citations)
 
 
+
         sentences = self.synthesizer.synthesize(
             selected
         )
@@ -180,6 +197,7 @@ class ResearchPipeline:
                 {
                     "text": x
                 }
+
                 for x in sentences
             ],
 
@@ -202,7 +220,7 @@ class ResearchPipeline:
 
             "analysis": analysis,
 
-            "results": fused,
+            "results": diverse,
 
             "evidence": filtered_evidence,
 
@@ -222,31 +240,41 @@ class ResearchPipeline:
 
 if __name__ == "__main__":
 
+
     pipeline = ResearchPipeline()
+
 
     result = pipeline.run(
         "What is Linux kernel?",
-        5
+        3
     )
 
 
     print("\n===== RESULT =====")
+
 
     print(
         "Confidence:",
         result["confidence"]
     )
 
+
     print(
         "Evidence:",
         result["evidence_count"]
     )
 
+
     print()
+
 
     for item in result["evidence"]:
+
         print(item)
+
 
     print()
 
-    print(result["citations"])
+    print(
+        result["citations"]
+    )
