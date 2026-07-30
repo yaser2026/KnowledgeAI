@@ -1,7 +1,13 @@
+from core.source_authority import SourceAuthority
+
+
 class EvidenceRanker:
 
+
     def __init__(self):
-        pass
+
+        self.authority = SourceAuthority()
+
 
 
     def score(self, item):
@@ -11,19 +17,24 @@ class EvidenceRanker:
             0
         )
 
+
         support = item.get(
             "support_count",
             1
         )
+
 
         quality = item.get(
             "content_quality",
             0
         )
 
-        source_score = item.get(
-            "source_score",
-            0.5
+
+        authority = self.authority.get_score(
+            item.get(
+                "url",
+                ""
+            )
         )
 
 
@@ -34,25 +45,43 @@ class EvidenceRanker:
 
 
         score = (
+
             confidence * 0.35
+
             +
-            support_score * 0.25
+
+            support_score * 0.20
+
             +
-            quality * 0.25
+
+            quality * 0.20
+
             +
-            source_score * 0.15
+
+            authority * 0.25
+
         )
 
 
         return round(
-            min(score, 1.0),
+            min(score,1.0),
             2
         )
 
 
+
     def rank(self, evidence):
 
+
         for item in evidence:
+
+            item["source_authority"] = self.authority.get_score(
+                item.get(
+                    "url",
+                    ""
+                )
+            )
+
 
             item["evidence_score"] = self.score(
                 item
