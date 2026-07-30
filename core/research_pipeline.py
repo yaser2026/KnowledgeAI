@@ -20,6 +20,9 @@ from core.evidence_merger import EvidenceMerger
 from core.evidence_ranker import EvidenceRanker
 from core.confidence import ConfidenceEngine
 
+from core.snippet_extractor import SnippetExtractor
+from core.query_focus import QueryFocus
+
 
 class ResearchPipeline:
 
@@ -29,16 +32,25 @@ class ResearchPipeline:
         self.analyzer = QueryAnalyzer()
 
         self.search = SearchEngine()
+
         self.adapter = ResearchAdapter()
 
         self.source_diversity = SourceDiversity()
 
         self.reranker = ReRanker()
 
+
         self.evidence = EvidenceMerger()
+
         self.evidence_ranker = EvidenceRanker()
 
         self.confidence = ConfidenceEngine()
+
+
+        self.query_focus = QueryFocus()
+
+        self.snippet = SnippetExtractor()
+
 
         self.context = ContextBuilder()
 
@@ -46,8 +58,11 @@ class ResearchPipeline:
 
         self.selector = SentenceSelector()
 
+
         self.citation = CitationManager()
+
         self.citation_dedup = CitationDeduplicator()
+
 
         self.answer = AnswerGenerator()
 
@@ -102,8 +117,38 @@ class ResearchPipeline:
         )
 
 
+        focused_evidence = self.query_focus.filter(
+            ranked_evidence,
+            question
+        )
+
+
+        for item in focused_evidence:
+
+            text = item.get(
+                "text",
+                item.get(
+                    "content",
+                    ""
+                )
+            )
+
+
+            snippets = self.snippet.extract(
+                text,
+                question
+            )
+
+
+            if snippets:
+
+                item["text"] = " ".join(
+                    snippets
+                )
+
+
         filtered_evidence = self.quality_filter.filter(
-            ranked_evidence
+            focused_evidence
         )
 
 
@@ -125,10 +170,11 @@ class ResearchPipeline:
         print("\n===== DEBUG SELECTED =====")
 
         for item in selected:
+
             print(item)
 
-        print("\n===== DEBUG CITATION INPUT =====")
 
+        print("\n===== DEBUG CITATION INPUT =====")
 
 
         citations_raw = self.citation.format(
@@ -217,23 +263,29 @@ if __name__ == "__main__":
 
     print("\n===== RESULT =====")
 
+
     print(
         "Confidence:",
         result["confidence"]
     )
+
 
     print(
         "Evidence:",
         result["evidence_count"]
     )
 
+
     print()
 
 
     for item in result["evidence"]:
+
         print(item)
 
 
     print()
 
-    print(result["citations"])
+    print(
+        result["citations"]
+    )
